@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 
 const token = import.meta.env.VITE_TOKEN
 
-let socket
+let socket: any = null
 
 function startSocketConnection(): void {
   socket = io('wss://192.168.0.164:3000', {

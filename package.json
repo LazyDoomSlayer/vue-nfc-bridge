@@ -2,7 +2,7 @@
   "name": "vue-nfc-bridge",
   "private": true,
   "scripts": {
-    "build": "turbo build",
+    "build-only": "turbo build-only",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
