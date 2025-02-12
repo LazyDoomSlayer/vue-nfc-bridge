@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   nfc-handler:
     build:
@@ -7,7 +5,7 @@ services:
       dockerfile: Dockerfile
       target: nfc-handler
     ports:
-      - "8081:80"
+      - "8081:443"
     restart: unless-stopped
 
   nfc-reader:
@@ -16,5 +14,5 @@ services:
       dockerfile: Dockerfile
       target: nfc-reader
     ports:
-      - "8082:80"
+      - "8082:443"
     restart: unless-stopped
