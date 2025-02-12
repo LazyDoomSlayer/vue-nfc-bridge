@@ -1,5 +1,5 @@
 {
-  "name": "vue-vite-turboed",
+  "name": "vue-nfc-bridge",
   "private": true,
   "scripts": {
     "build": "turbo build",
