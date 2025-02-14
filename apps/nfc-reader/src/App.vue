@@ -2,12 +2,14 @@
 import { io } from 'socket.io-client'
 import { ref, toRaw, onUnmounted, computed } from 'vue'
 
-const token = import.meta.env.VITE_TOKEN
+const accessToken = ref<string>()
 
 let socket
 
 function startSocketConnection(): void {
-  socket = io('wss://192.168.0.164:3000', {
+  if (!accessToken.value) throw new Error('Could not get access token')
+
+  socket = io(import.meta.env.VITE_NEST_ENDPOINT, {
     transports: ['websocket'],
     reconnection: true,
     reconnectionAttempts: 5,
@@ -15,7 +17,7 @@ function startSocketConnection(): void {
     withCredentials: true,
     rejectUnauthorized: false,
     auth: {
-      token,
+      token: accessToken.value,
       device: 'Mobile', // This must match the recipient room name
     },
   })
@@ -115,6 +117,16 @@ const devEUI = computed((): string | null => {
   <div class="container">
     <h1 class="title">MOBILE VERSION</h1>
 
+    <!-- Access Token Input -->
+    <div class="input-group">
+      <input
+        type="text"
+        v-model.trim="accessToken"
+        placeholder="Enter Access Token"
+        class="access-token-input"
+      />
+    </div>
+
     <div class="button-group">
       <button @click.left="startSocketConnection" class="button primary">Connect to Socket</button>
       <button @click.left="disconnectSocketConnection" class="button secondary">Disconnect</button>
@@ -160,6 +172,23 @@ const devEUI = computed((): string | null => {
   margin-bottom: 20px;
   text-transform: uppercase;
   letter-spacing: 1.2px;
+}
+
+/* Input group styling */
+.input-group {
+  margin-bottom: 15px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.access-token-input {
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  width: 100%;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
 }
 
 /* Button group for alignment */

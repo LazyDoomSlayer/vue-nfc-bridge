@@ -2,12 +2,14 @@
 import { io } from 'socket.io-client'
 import { ref, computed } from 'vue'
 
-const token = import.meta.env.VITE_TOKEN
+const accessToken = ref<string>()
 
 let socket: any = null
 
 function startSocketConnection(): void {
-  socket = io('wss://192.168.0.164:3000', {
+  if (!accessToken.value) throw new Error('Could not get token')
+
+  socket = io(import.meta.env.VITE_NEST_ENDPOINT, {
     transports: ['websocket'],
     reconnection: true,
     reconnectionAttempts: 5,
@@ -15,7 +17,7 @@ function startSocketConnection(): void {
     withCredentials: true,
     rejectUnauthorized: false,
     auth: {
-      token,
+      token: accessToken.value,
       device: 'Desktop', // This must match the recipient room name!
     },
   })
@@ -59,6 +61,16 @@ const devEUI = computed((): string | null => {
 <template>
   <div class="desktop-container">
     <h1 class="title">DESKTOP VERSION</h1>
+
+    <!-- Access Token Input -->
+    <div class="input-group">
+      <input
+        type="text"
+        v-model.trim="accessToken"
+        placeholder="Enter Access Token"
+        class="access-token-input"
+      />
+    </div>
 
     <div class="button-group">
       <button @click.left="startSocketConnection" class="button primary">Connect to Socket</button>
@@ -180,5 +192,16 @@ const devEUI = computed((): string | null => {
     font-size: 14px;
     padding: 12px 16px;
   }
+}
+
+.access-token-input {
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  width: 100%;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  margin-bottom: 2rem;
 }
 </style>
