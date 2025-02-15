@@ -91,7 +91,11 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(typescript@5.7.3)
 
-  apps/nfc-handler: {}
+  apps/nfc-handler:
+    devDependencies:
+      vite-plugin-mkcert:
+        specifier: ^1.17.6
+        version: 1.17.6(vite@6.1.0(@types/node@22.13.1)(jiti@2.4.2))
 
   apps/nfc-reader: {}
 
