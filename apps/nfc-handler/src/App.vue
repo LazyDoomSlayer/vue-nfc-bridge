@@ -16,6 +16,10 @@ interface INfcResponseDTO {
   status: ENFCScanStatus
 }
 
+interface INfcScanDTO {
+  deviceExtendedUniqueIdentifier: string
+  applicationExtendedUniqueIdentifier?: string
+}
 type TNDEFRecordMessageHeader = 'OrgID' | 'AppId' | 'DevEUI'
 
 const accessToken = ref<string>()
@@ -51,6 +55,10 @@ function startSocketConnection(): void {
   socket.on('nfc-scan', (data) => {
     console.log('Received NFC scan data:', data)
     incomingMessage.value = data
+    const nfcScanObject = data as INfcScanDTO
+
+    appId.value = nfcScanObject.applicationExtendedUniqueIdentifier
+    devEUI.value = nfcScanObject.deviceExtendedUniqueIdentifier
   })
 }
 
@@ -77,14 +85,8 @@ function disconnectSocketConnection(): void {
   socket = null
 }
 
-function parseMessageFromNDEFRecord(type: TNDEFRecordMessageHeader): string | null {
-  const item = incomingMessage.value.find((el) => el.data.startsWith(`${type}=`))
-  return item ? item.data.split('=')[1] : null
-}
-
-const orgID = computed((): string | null => parseMessageFromNDEFRecord('OrgID'))
-const appId = computed((): string | null => parseMessageFromNDEFRecord('AppId'))
-const devEUI = computed((): string | null => parseMessageFromNDEFRecord('DevEUI'))
+const appId = ref()
+const devEUI = ref()
 </script>
 
 <template>
@@ -122,9 +124,6 @@ const devEUI = computed((): string | null => parseMessageFromNDEFRecord('DevEUI'
       </p>
       <p>
         <span class="label">AppID:</span> <span class="value">{{ appId ?? 'N/A' }}</span>
-      </p>
-      <p>
-        <span class="label">OrgID:</span> <span class="value">{{ orgID ?? 'N/A' }}</span>
       </p>
     </section>
   </div>

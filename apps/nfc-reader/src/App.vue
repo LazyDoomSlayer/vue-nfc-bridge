@@ -140,7 +140,6 @@ function parseMessageFromNDEFRecord(type: TNDEFRecordMessageHeader): string | nu
   return item ? item.data.split('=')[1] : null
 }
 
-const orgID = computed((): string | null => parseMessageFromNDEFRecord('OrgID'))
 const appId = computed((): string | null => parseMessageFromNDEFRecord('AppId'))
 const devEUI = computed((): string | null => parseMessageFromNDEFRecord('DevEUI'))
 </script>
@@ -170,9 +169,6 @@ const devEUI = computed((): string | null => parseMessageFromNDEFRecord('DevEUI'
       </p>
       <p>
         <span class="label">AppID:</span> <span class="value">{{ appId ?? 'N/A' }}</span>
-      </p>
-      <p>
-        <span class="label">OrgID:</span> <span class="value">{{ orgID ?? 'N/A' }}</span>
       </p>
     </section>
 
