@@ -2,6 +2,20 @@
 import { io } from 'socket.io-client'
 import { ref, computed } from 'vue'
 
+enum EWebsocketClient {
+  READER = 'READER',
+  HANDLER = 'HANDLER',
+}
+enum ENFCScanStatus {
+  SUCCESS = 'SUCCESS',
+  ERROR = 'ERROR',
+}
+
+interface INfcResponseDTO {
+  message: string
+  status: ENFCScanStatus
+}
+
 const accessToken = ref<string>()
 
 let socket: any = null
@@ -16,9 +30,10 @@ function startSocketConnection(): void {
     reconnectionDelay: 3000,
     withCredentials: true,
     rejectUnauthorized: false,
+    secure: true,
     auth: {
       token: accessToken.value,
-      device: 'Desktop', // This must match the recipient room name!
+      client: EWebsocketClient.HANDLER,
     },
   })
 
@@ -30,10 +45,17 @@ function startSocketConnection(): void {
     console.log('Disconnected from WebSocket Server')
   })
 
-  socket.on('private-message', (data) => {
-    console.log('Message from server:', data)
-    incomingMessage.value = JSON.parse(data.message ?? {})
+  socket.on('nfc-scan', (data) => {
+    console.log('Received NFC scan data:', data)
   })
+}
+
+const sendMessage = () => {
+  const nfcResponseObject: INfcResponseDTO = {
+    status: ENFCScanStatus.SUCCESS,
+    message: 'All good u can clear and scan another',
+  }
+  socket.emit('nfc-response', nfcResponseObject)
 }
 
 const incomingMessage = ref<unknown[]>([])
@@ -75,6 +97,12 @@ const devEUI = computed((): string | null => {
     <div class="button-group">
       <button @click.left="startSocketConnection" class="button primary">Connect to Socket</button>
       <button @click.left="disconnectSocketConnection" class="button secondary">Disconnect</button>
+    </div>
+
+    <div>
+      <p>Actions</p>
+
+      <button @click.left="sendMessage" class="button">Go next</button>
     </div>
 
     <section class="info-section">

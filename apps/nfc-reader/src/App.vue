@@ -2,6 +2,15 @@
 import { io } from 'socket.io-client'
 import { ref, toRaw, onUnmounted, computed } from 'vue'
 
+enum EWebsocketClient {
+  READER = 'READER',
+  HANDLER = 'HANDLER',
+}
+enum ENFCScanStatus {
+  SUCCESS = 'SUCCESS',
+  ERROR = 'ERROR',
+}
+
 const accessToken = ref<string>()
 
 let socket
@@ -14,11 +23,12 @@ function startSocketConnection(): void {
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 3000,
+    secure: true,
     withCredentials: true,
     rejectUnauthorized: false,
     auth: {
       token: accessToken.value,
-      device: 'Mobile', // This must match the recipient room name
+      client: EWebsocketClient.READER,
     },
   })
 
@@ -30,7 +40,7 @@ function startSocketConnection(): void {
     console.log('Disconnected from WebSocket Server')
   })
 
-  socket.on('private-message', (data) => {
+  socket.on('nfc-response', (data) => {
     console.log('Message from server:', data)
   })
 }
@@ -39,17 +49,21 @@ function disconnectSocketConnection(): void {
   socket?.disconnect()
 }
 
-const sendPrivateMessage = (recipientId, message) => {
-  socket.emit('private-message', { recipientId, message })
+interface INfcScanDTO {
+  deviceExtendedUniqueIdentifier: string
+  applicationExtendedUniqueIdentifier?: string
 }
 
 const sendMessage = () => {
-  const stringify = JSON.stringify(toRaw(nfcRecords.value))
+  const devEUI = parseDevEUI()
+  if (!devEUI) throw new Error('Could not get dev id')
+  const nfcScanMessageObject: INfcScanDTO = {
+    deviceExtendedUniqueIdentifier: devEUI,
+  }
 
-  sendPrivateMessage('Desktop', stringify)
+  socket.emit('nfc-scan', nfcScanMessageObject)
 }
 
-const message = ref('No NFC data')
 let nfcReader: any
 
 const nfcRecords = ref<any[]>([])
@@ -107,10 +121,12 @@ const appId = computed((): string | null => {
   return item ? item.data.split('=')[1] : null
 })
 
-const devEUI = computed((): string | null => {
+const devEUI = computed((): string | null => parseDevEUI())
+
+function parseDevEUI(): string | null {
   const item = nfcRecords.value.find((el) => el.data.startsWith('DevEUI='))
   return item ? item.data.split('=')[1] : null
-})
+}
 </script>
 
 <template>
