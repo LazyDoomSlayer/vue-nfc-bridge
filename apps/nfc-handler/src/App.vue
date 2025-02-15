@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { io, Socket } from 'socket.io-client'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
 enum EWebsocketClient {
   READER = 'READER',
@@ -20,7 +20,6 @@ interface INfcScanDTO {
   deviceExtendedUniqueIdentifier: string
   applicationExtendedUniqueIdentifier?: string
 }
-type TNDEFRecordMessageHeader = 'OrgID' | 'AppId' | 'DevEUI'
 
 const accessToken = ref<string>()
 
