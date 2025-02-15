@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 import { ref, toRaw, onUnmounted, computed } from 'vue'
 
 enum EWebsocketClient {
@@ -10,13 +10,32 @@ enum ENFCScanStatus {
   SUCCESS = 'SUCCESS',
   ERROR = 'ERROR',
 }
+interface INfcScanDTO {
+  deviceExtendedUniqueIdentifier: string
+  applicationExtendedUniqueIdentifier?: string
+}
+
+interface INFCRecordObject {
+  id: string
+  recordType: string
+  mediaType: string
+  encoding: string
+  lang: string
+  data: string
+}
+
+interface INfcResponseDTO {
+  message?: string
+  status: ENFCScanStatus
+}
 
 const accessToken = ref<string>()
 
-let socket
+let socket: Socket | null = null
 
 function startSocketConnection(): void {
   if (!accessToken.value) throw new Error('Could not get access token')
+  if (socket) throw new Error('You are already conncted try disconnecting ')
 
   socket = io(import.meta.env.VITE_NEST_ENDPOINT, {
     transports: ['websocket'],
@@ -42,31 +61,32 @@ function startSocketConnection(): void {
 
   socket.on('nfc-response', (data) => {
     console.log('Message from server:', data)
+    handleNFCResponse(data as INfcResponseDTO)
   })
 }
 
-function disconnectSocketConnection(): void {
-  socket?.disconnect()
-}
+const nfcResponseMessage = ref<string | null>(null)
+function handleNFCResponse(data: INfcResponseDTO): void {
+  nfcResponseMessage.value = data.message ?? null
 
-interface INfcScanDTO {
-  deviceExtendedUniqueIdentifier: string
-  applicationExtendedUniqueIdentifier?: string
+  if (data.status === ENFCScanStatus.SUCCESS) {
+    nfcRecords.value = []
+    return
+  }
 }
 
 const sendMessage = () => {
-  const devEUI = parseDevEUI()
-  if (!devEUI) throw new Error('Could not get dev id')
+  if (!devEUI.value) throw new Error('Could not get dev id')
   const nfcScanMessageObject: INfcScanDTO = {
-    deviceExtendedUniqueIdentifier: devEUI,
+    deviceExtendedUniqueIdentifier: devEUI.value,
   }
 
   socket.emit('nfc-scan', nfcScanMessageObject)
 }
 
-let nfcReader: any
+let nfcReader: unknown = null
 
-const nfcRecords = ref<any[]>([])
+const nfcRecords = ref<INFCRecordObject[]>([])
 
 const startNfcScan = async () => {
   if (!('NDEFReader' in window)) {
@@ -75,20 +95,19 @@ const startNfcScan = async () => {
   }
 
   try {
-    const nfcReader = new (window as any).NDEFReader()
+    const nfcReader = new window.NDEFReader()
     // await nfcReader.scan()
 
     await nfcReader.scan()
 
-    nfcReader.addEventListener('reading', (event: any) => {
-      console.log('event', event)
-      nfcRecords.value = event.message.records.map((record: any) => ({
+    nfcReader.addEventListener('reading', (event) => {
+      nfcRecords.value = event.message.records.map((record: INFCRecordObject) => ({
         id: record.id,
         recordType: record.recordType,
         mediaType: record.mediaType || 'N/A',
         encoding: record.encoding || 'N/A',
         lang: record.lang || 'N/A',
-        data: decodeData(record.data), // Convert DataView
+        data: decodeData(record.data),
       }))
 
       console.log('NFC Records Updated:', nfcRecords.value)
@@ -111,22 +130,19 @@ const stopNfcScan = () => {
 
 onUnmounted(() => stopNfcScan())
 
-const orgID = computed((): string | null => {
-  const item = nfcRecords.value.find((el) => el.data.startsWith('OrgID='))
-  return item ? item.data.split('=')[1] : null
-})
+function disconnectSocketConnection(): void {
+  socket?.disconnect()
+  socket = null
+}
 
-const appId = computed((): string | null => {
-  const item = nfcRecords.value.find((el) => el.data.startsWith('AppId='))
-  return item ? item.data.split('=')[1] : null
-})
-
-const devEUI = computed((): string | null => parseDevEUI())
-
-function parseDevEUI(): string | null {
-  const item = nfcRecords.value.find((el) => el.data.startsWith('DevEUI='))
+function parseMessageFromNDEFRecord(type: TNDEFRecordMessageHeader): string | null {
+  const item = nfcRecords.value.find((el) => el.data.startsWith(`${type}=`))
   return item ? item.data.split('=')[1] : null
 }
+
+const orgID = computed((): string | null => parseMessageFromNDEFRecord('OrgID'))
+const appId = computed((): string | null => parseMessageFromNDEFRecord('AppId'))
+const devEUI = computed((): string | null => parseMessageFromNDEFRecord('DevEUI'))
 </script>
 
 <template>
@@ -161,6 +177,7 @@ function parseDevEUI(): string | null {
     </section>
 
     <div class="button-group">
+      <p>{{ nfcResponseMessage }}</p>
       <button @click.left="startNfcScan" class="button accent">Scan NFCs</button>
       <button @click.left="sendMessage" class="button accent">Send NFC data</button>
     </div>
