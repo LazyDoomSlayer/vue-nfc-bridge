@@ -1,130 +1,43 @@
 <script setup lang="ts">
-import { io, Socket } from 'socket.io-client'
 import { ref } from 'vue'
+import { useWebSocket } from '@/composables/useWebSocket'
 
-enum EWebsocketClient {
-  READER = 'READER',
-  HANDLER = 'HANDLER',
-}
-enum ENFCScanStatus {
-  SUCCESS = 'SUCCESS',
-  ERROR = 'ERROR',
-}
+const accessToken = ref<string>('')
 
-interface INfcResponseDTO {
-  message?: string
-  status: ENFCScanStatus
-}
-
-interface INfcScanDTO {
-  deviceExtendedUniqueIdentifier: string
-  applicationExtendedUniqueIdentifier?: string
-}
-
-const accessToken = ref<string>()
-
-let socket: Socket | null = null
-
-function startSocketConnection(): void {
-  if (!accessToken.value) throw new Error('Could not get token')
-  if (socket) throw new Error('You are already conncted try disconnecting ')
-
-  socket = io(import.meta.env.VITE_NEST_ENDPOINT, {
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 3000,
-    withCredentials: true,
-    rejectUnauthorized: false,
-    secure: true,
-    auth: {
-      token: accessToken.value,
-      client: EWebsocketClient.HANDLER,
-    },
-  })
-
-  socket.on('connect', () => {
-    console.log('Connected to WebSocket Server')
-  })
-
-  socket.on('disconnect', () => {
-    console.log('Disconnected from WebSocket Server')
-  })
-
-  socket.on('nfc-scan', (data) => {
-    console.log('Received NFC scan data:', data)
-    incomingMessage.value = data
-    const nfcScanObject = data as INfcScanDTO
-
-    appId.value = nfcScanObject.applicationExtendedUniqueIdentifier
-    devEUI.value = nfcScanObject.deviceExtendedUniqueIdentifier
-  })
-}
-
-function sendNfcResponseMessage(status: ENFCScanStatus): void {
-  try {
-    const nfcResponseObject: INfcResponseDTO = {
-      status,
-    }
-
-    if (status === ENFCScanStatus.SUCCESS) {
-      nfcResponseObject.message = 'All good u can clear and scan another'
-    }
-
-    socket.emit('nfc-response', nfcResponseObject)
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-const incomingMessage = ref<unknown[]>([])
-
-function disconnectSocketConnection(): void {
-  socket?.disconnect()
-  socket = null
-}
-
-const appId = ref()
-const devEUI = ref()
+const {
+  socket,
+  incomingMessage,
+  appId,
+  devEUI,
+  connectSocket,
+  sendNfcResponseMessage,
+  disconnectSocket,
+} = useWebSocket(accessToken.value, EWebsocketClient.HANDLER)
 </script>
 
 <template>
-  <div class="desktop-container">
-    <h1 class="title">DESKTOP VERSION</h1>
+  <div>
+    <h2>WebSocket NFC Handler</h2>
 
-    <!-- Access Token Input -->
-    <div class="input-group">
-      <input
-        type="text"
-        v-model.trim="accessToken"
-        placeholder="Enter Access Token"
-        class="access-token-input"
-      />
-    </div>
+    <!-- WebSocket Controls -->
+    <button @click="connectSocket">Connect</button>
+    <button @click="disconnectSocket" :disabled="!socket">Disconnect</button>
 
-    <div class="button-group">
-      <button @click.left="startSocketConnection" class="button primary">Connect to Socket</button>
-      <button @click.left="disconnectSocketConnection" class="button secondary">Disconnect</button>
-    </div>
+    <!-- Display Incoming NFC Messages -->
+    <p v-if="incomingMessage.length">📡 Incoming NFC Message: {{ incomingMessage }}</p>
 
-    <div>
-      <p>Actions</p>
-      <button @click.left="sendNfcResponseMessage(ENFCScanStatus.ERROR)" class="button">
-        ERROR / Cancel
-      </button>
-      <button @click.left="sendNfcResponseMessage(ENFCScanStatus.SUCCESS)" class="button">
-        Success
-      </button>
-    </div>
+    <!-- Send NFC Response Messages -->
+    <button @click="sendNfcResponseMessage(ENFCScanStatus.SUCCESS)" :disabled="!socket">
+      ✅ Send Success Response
+    </button>
 
-    <section class="info-section">
-      <p>
-        <span class="label">DevEUI:</span> <span class="value">{{ devEUI ?? 'N/A' }}</span>
-      </p>
-      <p>
-        <span class="label">AppID:</span> <span class="value">{{ appId ?? 'N/A' }}</span>
-      </p>
-    </section>
+    <button @click="sendNfcResponseMessage(ENFCScanStatus.FAILURE)" :disabled="!socket">
+      ❌ Send Failure Response
+    </button>
+
+    <!-- Display App ID & Device EUI -->
+    <p v-if="appId">App ID: {{ appId }}</p>
+    <p v-if="devEUI">Device EUI: {{ devEUI }}</p>
   </div>
 </template>
 
