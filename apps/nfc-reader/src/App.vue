@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import useNfcScan from '@/composables/useNfcScan'
-import useWebSocket from '@/composables/useWebSocket'
+import useNfcScan from '../composables/useNfcScan'
+import useWebSocket from '../composables/useWebsocket'
+
+import { EWebsocketClient } from '../types'
 
 const accessToken = ref<string>()
 

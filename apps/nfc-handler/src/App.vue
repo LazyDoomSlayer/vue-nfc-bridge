@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useWebSocket } from '@/composables/useWebSocket'
+import { useWebSocket } from '../composables/useWebSocket'
+import {ENFCScanStatus, EWebsocketClient} from '../types'
 
 const accessToken = ref<string>('')
 
 const {
-  socket,
   incomingMessage,
   appId,
   devEUI,
@@ -15,32 +15,47 @@ const {
 } = useWebSocket(accessToken.value, EWebsocketClient.HANDLER)
 </script>
 
+
 <template>
-  <div>
-    <h2>WebSocket NFC Handler</h2>
+  <div class="desktop-container">
+    <h1 class="title">DESKTOP VERSION</h1>
 
-    <!-- WebSocket Controls -->
-    <button @click="connectSocket">Connect</button>
-    <button @click="disconnectSocket" :disabled="!socket">Disconnect</button>
+    <!-- Access Token Input -->
+    <div class="input-group">
+      <input
+        type="text"
+        v-model.trim="accessToken"
+        placeholder="Enter Access Token"
+        class="access-token-input"
+      />
+    </div>
 
-    <!-- Display Incoming NFC Messages -->
-    <p v-if="incomingMessage.length">📡 Incoming NFC Message: {{ incomingMessage }}</p>
+    <div class="button-group">
+      <button @click.left="connectSocket" class="button primary">Connect to Socket</button>
+      <button @click.left="disconnectSocket" class="button secondary">Disconnect</button>
+    </div>
 
-    <!-- Send NFC Response Messages -->
-    <button @click="sendNfcResponseMessage(ENFCScanStatus.SUCCESS)" :disabled="!socket">
-      ✅ Send Success Response
-    </button>
+    <div>
+      <p>Actions</p>
+      <button @click.left="sendNfcResponseMessage(ENFCScanStatus.ERROR)" class="button secondary">
+        ERROR / Cancel
+      </button>
+      <button @click.left="sendNfcResponseMessage(ENFCScanStatus.SUCCESS)" class="button primary">
+        Success
+      </button>
+    </div>
 
-    <button @click="sendNfcResponseMessage(ENFCScanStatus.FAILURE)" :disabled="!socket">
-      ❌ Send Failure Response
-    </button>
-
-    <!-- Display App ID & Device EUI -->
-    <p v-if="appId">App ID: {{ appId }}</p>
-    <p v-if="devEUI">Device EUI: {{ devEUI }}</p>
+    <p v-if="incomingMessage.length > 0">{{ incomingMessage}}</p>
+    <section class="info-section">
+      <p>
+        <span class="label">DevEUI:</span> <span class="value">{{ devEUI ?? 'N/A' }}</span>
+      </p>
+      <p>
+        <span class="label">AppID:</span> <span class="value">{{ appId ?? 'N/A' }}</span>
+      </p>
+    </section>
   </div>
 </template>
-
 <style scoped>
 /* Main Container */
 .desktop-container {
