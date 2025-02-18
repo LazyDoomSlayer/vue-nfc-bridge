@@ -60,11 +60,14 @@ export default function useWebSocket(
     }
   }
 
-  const sendMessage = (devEUI: string) => {
+  const sendMessage = (devEUI: string, appID?: string) => {
     if (!devEUI) throw new Error('Could not get device ID')
 
     const nfcScanMessageObject: INfcScanDTO = {
       deviceExtendedUniqueIdentifier: devEUI,
+    }
+    if (appID) {
+      nfcScanMessageObject['applicationExtendedUniqueIdentifier'] = appID
     }
 
     socket.value?.emit('nfc-scan', nfcScanMessageObject)

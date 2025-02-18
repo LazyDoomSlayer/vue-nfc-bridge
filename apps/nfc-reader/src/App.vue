@@ -48,7 +48,7 @@ const { connectSocket, sendMessage, disconnectSocket, nfcResponseMessage } = use
     <div class="button-group">
       <p>{{ nfcResponseMessage }}</p>
       <button @click.left="startNfcScan" class="button accent">Scan NFCs</button>
-      <button @click.left="sendMessage" class="button accent">Send NFC data</button>
+      <button @click.left="sendMessage(devEUI, appId)" class="button accent">Send NFC data</button>
     </div>
   </div>
 </template>
