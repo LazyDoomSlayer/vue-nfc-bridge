@@ -10,7 +10,7 @@ const accessToken = ref<string>()
 const { isScanning, startNfcScan, appId, devEUI, nfcRecords } = useNfcScan()
 
 const { connectSocket, sendMessage, disconnectSocket, nfcResponseMessage } = useWebSocket(
-  accessToken.value,
+  accessToken,
   EWebsocketClient.READER,
   nfcRecords,
 )

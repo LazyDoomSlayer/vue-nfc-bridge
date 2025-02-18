@@ -1,12 +1,7 @@
-import { ref, onUnmounted, Ref } from 'vue'
+import { ref, onUnmounted, type Ref } from 'vue'
 import { io, Socket } from 'socket.io-client'
-import {
-  ENFCScanStatus,
-  EWebsocketClient,
-  INFCRecordObject,
-  INfcResponseDTO,
-  INfcScanDTO,
-} from '../types'
+import { ENFCScanStatus, EWebsocketClient } from '../types'
+import type { INFCRecordObject, INfcResponseDTO, INfcScanDTO } from '../types'
 
 interface IUseWebSocketResponse {
   socket: Ref<Socket | null>
@@ -17,7 +12,7 @@ interface IUseWebSocketResponse {
 }
 
 export default function useWebSocket(
-  accessToken: string,
+  accessToken: Ref<string>,
   clientType: EWebsocketClient,
   nfcRecords: Ref<INFCRecordObject[]>,
 ): IUseWebSocketResponse {

@@ -1,5 +1,6 @@
-import { ref, onUnmounted, Ref, computed, ComputedRef } from 'vue'
-import { INFCRecordObject, TNDEFRecordMessageHeader } from '../types'
+import { ref, onUnmounted, computed } from 'vue'
+import type { Ref, ComputedRef } from 'vue'
+import type { INFCRecordObject, TNDEFRecordMessageHeader } from '../types'
 import { decodeNDEFData } from '../utils/nfc.helper'
 
 interface IUseNfcScanResponse {

@@ -1,6 +1,9 @@
-import { ref, onUnmounted, Ref } from 'vue'
 import { io, Socket } from 'socket.io-client'
-import { ENFCScanStatus, EWebsocketClient, INfcResponseDTO, INfcScanDTO } from '../types'
+
+import { ref, onUnmounted } from 'vue'
+import type { Ref } from 'vue'
+import { ENFCScanStatus, EWebsocketClient } from '../types'
+import type { INfcResponseDTO, INfcScanDTO } from '../types'
 
 interface IUseWebSocket {
   socket: Ref<Socket | null>
@@ -12,14 +15,17 @@ interface IUseWebSocket {
   disconnectSocket: () => void
 }
 
-export function useWebSocket(accessToken: string, clientType: EWebsocketClient): IUseWebSocket {
+export function useWebSocket(
+  accessToken: Ref<string>,
+  clientType: EWebsocketClient,
+): IUseWebSocket {
   const socket = ref<Socket | null>(null)
   const incomingMessage = ref<unknown[]>([])
   const appId = ref<string | null>(null)
   const devEUI = ref<string | null>(null)
 
   const connectSocket = () => {
-    if (!accessToken) throw new Error('Could not get token')
+    if (!accessToken.value) throw new Error('Could not get token')
     if (socket.value) throw new Error('Already connected. Try disconnecting first.')
 
     socket.value = io(import.meta.env.VITE_NEST_ENDPOINT, {
@@ -31,7 +37,7 @@ export function useWebSocket(accessToken: string, clientType: EWebsocketClient):
       rejectUnauthorized: false,
       secure: true,
       auth: {
-        token: accessToken,
+        token: accessToken.value,
         client: clientType,
       },
     })

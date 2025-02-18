@@ -1,20 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useWebSocket } from '../composables/useWebSocket'
-import {ENFCScanStatus, EWebsocketClient} from '../types'
+import { ENFCScanStatus, EWebsocketClient } from '../types'
 
 const accessToken = ref<string>('')
 
-const {
-  incomingMessage,
-  appId,
-  devEUI,
-  connectSocket,
-  sendNfcResponseMessage,
-  disconnectSocket,
-} = useWebSocket(accessToken.value, EWebsocketClient.HANDLER)
+const { incomingMessage, appId, devEUI, connectSocket, sendNfcResponseMessage, disconnectSocket } =
+  useWebSocket(accessToken, EWebsocketClient.HANDLER)
 </script>
-
 
 <template>
   <div class="desktop-container">
@@ -45,7 +38,7 @@ const {
       </button>
     </div>
 
-    <p v-if="incomingMessage.length > 0">{{ incomingMessage}}</p>
+    <p v-if="incomingMessage.length > 0">{{ incomingMessage }}</p>
     <section class="info-section">
       <p>
         <span class="label">DevEUI:</span> <span class="value">{{ devEUI ?? 'N/A' }}</span>
