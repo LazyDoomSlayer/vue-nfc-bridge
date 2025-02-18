@@ -20,7 +20,7 @@ export default function useWebSocket(
   const nfcResponseMessage = ref<string | null>(null)
 
   const connectSocket = () => {
-    if (!accessToken) throw new Error('Could not get access token')
+    if (!accessToken.value) throw new Error('Could not get access token')
     if (socket.value) throw new Error('Already connected. Try disconnecting first.')
 
     socket.value = io(import.meta.env.VITE_NEST_ENDPOINT, {
@@ -32,7 +32,7 @@ export default function useWebSocket(
       withCredentials: true,
       rejectUnauthorized: false,
       auth: {
-        token: accessToken,
+        token: accessToken.value,
         client: clientType,
       },
     })
