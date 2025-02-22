@@ -31,11 +31,11 @@ export function useWebSocket(
     socket.value = io(import.meta.env.VITE_NEST_ENDPOINT, {
       transports: ['websocket'],
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 3000,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 2000,
+      secure: true,
       withCredentials: true,
       rejectUnauthorized: false,
-      secure: true,
       auth: {
         token: accessToken.value,
         client: clientType,

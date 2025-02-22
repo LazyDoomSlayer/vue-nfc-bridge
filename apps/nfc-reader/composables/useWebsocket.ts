@@ -26,7 +26,7 @@ export default function useWebSocket(
     socket.value = io(import.meta.env.VITE_NEST_ENDPOINT, {
       transports: ['websocket'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 2,
       reconnectionDelay: 3000,
       secure: true,
       withCredentials: true,
